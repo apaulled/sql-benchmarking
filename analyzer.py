@@ -105,7 +105,7 @@ class Analyzer:
 
                 real_stop = stop_small if table_geospatial else stop
                 real_step = step_small if table_geospatial else step
-                for i in range(start, real_stop, real_step):
+                for i in range(2):
                     keys = list(data.keys())
                     ndx = [x for x in keys if 'ndx' in x][0]
                     plain = [x for x in keys if 'plain' in x][0]
@@ -154,6 +154,45 @@ class Analyzer:
                     'join_ndx': points_join_ndx
                 }
 
+                if 'point' in name:
+                    points_pp_plain = []
+                    points_pp_ndx = []
+                    for i in range(start, 20000, (20000 - start) // 10):
+                        data_point = tables['point_test']
+                        data_poly = tables['poly_test']
+                        queries = generate_queries(
+                            'point_test', 'pt_plain', data_point['pt_plain'], 'pt_ndx', data_point['pt_ndx'],
+                            'poly_test', 'poly_plain', data_poly['poly_plain'], 'poly_ndx', data_poly['poly_ndx']
+                        )
+
+                        self.database.insert_dummy_data(
+                            'point_test', i, 'id', 'int', 'pt_plain', data_point['pt_plain'], 'pt_ndx', data_point['pt_ndx'])
+                        self.database.create_index('point_test', 'pt_ndx', 'pt_ndx', True)
+
+                        self.database.insert_dummy_data(
+                            'poly_test', i, 'id', 'int', 'poly_plain', data_poly['poly_plain'], 'poly_ndx', data_poly['poly_ndx'])
+                        self.database.create_index('poly_test', 'poly_ndx', 'poly_ndx', True)
+
+                        trials_pp_plain = []
+                        trials_pp_ndx = []
+
+                        print('Timing Point/Poly Queries')
+                        t1 = time.time()
+                        num_trials = 2
+                        for j in range(num_trials):
+                            trials_pp_plain.append(self.database.time_query(queries[0]))
+                            trials_pp_ndx.append(self.database.time_query(queries[1]))
+                            print(f'Timed: {j + 1}/{num_trials}')
+                        t2 = time.time()
+                        print(f'Timed {num_trials} * 2 Point/Poly queries in {t2 - t1} seconds')
+                        points_pp_plain.append(sum(trials_pp_plain) / num_trials)
+                        points_pp_ndx.append(sum(trials_pp_ndx) / num_trials)
+
+                        self.database.clear_table('point_test', 'pt_ndx')
+                        self.database.clear_table('poly_test', 'poly_ndx')
+
+                    results['point_poly_test'] = {'join_plain': points_pp_plain, 'join_ndx': points_pp_ndx}
+
         selects = SelectSection(
             str_plain=results['str_test']['plain'],
             str_ndx=results['str_test']['ndx'],
@@ -174,14 +213,14 @@ class Analyzer:
             point_ndx=results['point_test']['join_ndx'] if 'point_test' in results else None,
             poly_plain=results['poly_test']['join_plain'] if 'poly_test' in results else None,
             poly_ndx=results['poly_test']['join_ndx'] if 'poly_test' in results else None,
-            point_poly_plain=None,
-            point_poly_ndx=None
+            point_poly_plain=results['point_poly_test']['join_plain'] if 'point_poly_test' in results else None,
+            point_poly_ndx=results['point_poly_test']['join_ndx'] if 'point_poly_test' in results else None
         )
 
         id_results = {}
         for name, data in id_tables.items():
             points = []
-            for i in range(start, stop, step):
+            for i in range(2):
                 self.database.insert_dummy_data(
                     name, i, 'id', data['id'], 'num', data['num'])
 

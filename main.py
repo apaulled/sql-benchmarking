@@ -14,7 +14,7 @@ def run_analysis(postgres=False, mysql=False, sqlite=False):
             'testing'
         )
         pg_analyzer = Analyzer(pg)
-        pg_analyzer.run_analysis('analyses/analysis_pg.json', geospatial=True, ids=True)
+        pg_analyzer.run_analysis('analyses/analysis_pg2.json', geospatial=True, ids=True)
         print(pg_analyzer.report)
 
     if mysql:
@@ -24,7 +24,7 @@ def run_analysis(postgres=False, mysql=False, sqlite=False):
             'password'
         )
         ms_analyzer = Analyzer(ms)
-        ms_analyzer.run_analysis('analyses/analysis_ms.json', geospatial=True, ids=True)
+        ms_analyzer.run_analysis('analyses/analysis_ms2.json', geospatial=True, ids=True)
         print(ms_analyzer.report)
 
     if sqlite:
@@ -35,7 +35,7 @@ def run_analysis(postgres=False, mysql=False, sqlite=False):
 
 
 def main():
-    run_analysis()
+    run_analysis(postgres=True, mysql=True)
 
 
 if __name__ == "__main__":

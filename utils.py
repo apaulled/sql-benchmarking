@@ -7,9 +7,14 @@ def random_string(length: int) -> str:
     return ''.join(random.choices(characters, k=length))
 
 
-def generate_queries(table: str, col1: str, type1: str, col2: str, type2: str):
+def generate_queries(table: str, col1: str, type1: str, col2: str, type2: str,
+                     table2: str = None, col3: str = None, type3: str = None, col4: str = None, type4: str = None):
     where = None
     joins = None
+    if table2 is not None:
+        if type1 == 'geometry(point, 4326)' and type3 == 'geometry(polygon, 4326)':
+            joins = [f"st_contains(b.{col3}, a.{col1});", f"st_contains(b.{col4}, a.{col2});"]
+            return [f"select * from {table} a join {table2} b on " + x for x in joins]
     if type1 == type2 == 'int':
         where = [f"{col} = -1;" for col in [col1, col2]]
         joins = [f"a.{col} = b.{col};" for col in [col1, col2]]

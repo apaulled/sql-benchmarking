@@ -99,6 +99,6 @@ class PostgresDatabase(SqlDatabase):
 
     def create_index(self, table: str, index: str, column: str, geospatial: bool = False):
         if geospatial:
-            self.cursor.execute(f'create unique index {index} on {table} using GIST ({column});')
+            self.cursor.execute(f'create index {index} on {table} using GIST ({column});')
         else:
             self.cursor.execute(f'create unique index {index} on {table} ({column});')
